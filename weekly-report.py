@@ -146,6 +146,7 @@ if __name__ == '__main__':
         # Send mails
         for mail_to in mails_send.split(','):
             try:
+                log.info('Sending mail to %s' % mail_to)
                 msg['To'] = mail_to
                 server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
                 server.ehlo()
