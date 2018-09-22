@@ -104,6 +104,9 @@ if __name__ == '__main__':
     for tid, t in res.iteritems():
         if t['name'] is not None:
             continue
+        if tid is None:
+            res[tid]['name'] = 'Transfer'
+            continue
         cat = api_cat.get_category_by_id(budget_id, tid).to_dict()['data']['category']
         res[tid]['name'] = cat['name']
 
