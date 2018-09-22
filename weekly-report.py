@@ -51,7 +51,7 @@ if __name__ == '__main__':
     mail_user = os.environ.get('YNAB_MAIL_USER')
     mail_password = os.environ.get('YNAB_MAIL_PASSWORD')
     # Comma separated list of mails to send the report to
-    mails_send = os.environ.get('YNAB_MAILS_SEND')
+    mails_send = os.environ.get('YNAB_MAILS_SEND', None)
 
     # Initialize the API
     log.info('Initializing API...')
@@ -139,15 +139,19 @@ if __name__ == '__main__':
     msg.attach(part1)
     msg.attach(part2)
 
-    # Send mails
-    for mail_to in mails_send.split(','):
-        try:
-            msg['To'] = mail_to
-            server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
-            server.ehlo()
-            server.login(mail_user, mail_password)
-            server.sendmail(mail_user, mail_to, msg.as_string())
-            server.close()
-            log.info('Sent mail to %s' % mail_to)
-        except Exception as e:
-            log.error('Error sending mail to %s: %s' % (mail_to, e))
+    # If mails are not defined, just output the resut
+    if mails_send is None:
+        print(mail_text)
+    else:
+        # Send mails
+        for mail_to in mails_send.split(','):
+            try:
+                msg['To'] = mail_to
+                server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+                server.ehlo()
+                server.login(mail_user, mail_password)
+                server.sendmail(mail_user, mail_to, msg.as_string())
+                server.close()
+                log.info('Sent mail to %s' % mail_to)
+            except Exception as e:
+                log.error('Error sending mail to %s: %s' % (mail_to, e))
