@@ -48,6 +48,7 @@ if __name__ == '__main__':
     # Get configuration from environment
     api_key = os.environ.get('YNAB_API_KEY')
     budget_name = os.environ.get('YNAB_BUDGET_NAME')
+    mail_server = os.environ.get('YNAB_MAIL_SERVER', 'smtp.gmail.com')
     mail_user = os.environ.get('YNAB_MAIL_USER')
     mail_password = os.environ.get('YNAB_MAIL_PASSWORD')
     # Comma separated list of mails to send the report to
@@ -148,7 +149,7 @@ if __name__ == '__main__':
             try:
                 log.info('Sending mail to %s' % mail_to)
                 msg['To'] = mail_to
-                server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+                server = smtplib.SMTP_SSL(mail_server, 465)
                 server.ehlo()
                 server.login(mail_user, mail_password)
                 server.sendmail(mail_user, mail_to, msg.as_string())
