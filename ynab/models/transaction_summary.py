@@ -131,8 +131,6 @@ class TransactionSummary(object):
         :param date: The date of this TransactionSummary.  # noqa: E501
         :type: date
         """
-        if date is None:
-            raise ValueError("Invalid value for `date`, must not be `None`")  # noqa: E501
 
         self._date = date
 
@@ -156,9 +154,6 @@ class TransactionSummary(object):
         :param amount: The amount of this TransactionSummary.  # noqa: E501
         :type: float
         """
-        if amount is None:
-            raise ValueError("Invalid value for `amount`, must not be `None`")  # noqa: E501
-
         self._amount = amount
 
     @property
@@ -179,9 +174,6 @@ class TransactionSummary(object):
         :param memo: The memo of this TransactionSummary.  # noqa: E501
         :type: str
         """
-        if memo is None:
-            raise ValueError("Invalid value for `memo`, must not be `None`")  # noqa: E501
-
         self._memo = memo
 
     @property
@@ -204,15 +196,6 @@ class TransactionSummary(object):
         :param cleared: The cleared of this TransactionSummary.  # noqa: E501
         :type: str
         """
-        if cleared is None:
-            raise ValueError("Invalid value for `cleared`, must not be `None`")  # noqa: E501
-        allowed_values = ["cleared", "uncleared", "reconciled"]  # noqa: E501
-        if cleared not in allowed_values:
-            raise ValueError(
-                "Invalid value for `cleared` ({0}), must be one of {1}"  # noqa: E501
-                .format(cleared, allowed_values)
-            )
-
         self._cleared = cleared
 
     @property
@@ -235,9 +218,6 @@ class TransactionSummary(object):
         :param approved: The approved of this TransactionSummary.  # noqa: E501
         :type: bool
         """
-        if approved is None:
-            raise ValueError("Invalid value for `approved`, must not be `None`")  # noqa: E501
-
         self._approved = approved
 
     @property
@@ -260,15 +240,6 @@ class TransactionSummary(object):
         :param flag_color: The flag_color of this TransactionSummary.  # noqa: E501
         :type: str
         """
-        if flag_color is None:
-            raise ValueError("Invalid value for `flag_color`, must not be `None`")  # noqa: E501
-        allowed_values = ["red", "orange", "yellow", "green", "blue", "purple"]  # noqa: E501
-        if flag_color not in allowed_values:
-            raise ValueError(
-                "Invalid value for `flag_color` ({0}), must be one of {1}"  # noqa: E501
-                .format(flag_color, allowed_values)
-            )
-
         self._flag_color = flag_color
 
     @property
@@ -289,9 +260,6 @@ class TransactionSummary(object):
         :param account_id: The account_id of this TransactionSummary.  # noqa: E501
         :type: str
         """
-        if account_id is None:
-            raise ValueError("Invalid value for `account_id`, must not be `None`")  # noqa: E501
-
         self._account_id = account_id
 
     @property
@@ -312,9 +280,6 @@ class TransactionSummary(object):
         :param payee_id: The payee_id of this TransactionSummary.  # noqa: E501
         :type: str
         """
-        if payee_id is None:
-            raise ValueError("Invalid value for `payee_id`, must not be `None`")  # noqa: E501
-
         self._payee_id = payee_id
 
     @property
@@ -335,9 +300,6 @@ class TransactionSummary(object):
         :param category_id: The category_id of this TransactionSummary.  # noqa: E501
         :type: str
         """
-        if category_id is None:
-            raise ValueError("Invalid value for `category_id`, must not be `None`")  # noqa: E501
-
         self._category_id = category_id
 
     @property
@@ -358,9 +320,6 @@ class TransactionSummary(object):
         :param transfer_account_id: The transfer_account_id of this TransactionSummary.  # noqa: E501
         :type: str
         """
-        if transfer_account_id is None:
-            raise ValueError("Invalid value for `transfer_account_id`, must not be `None`")  # noqa: E501
-
         self._transfer_account_id = transfer_account_id
 
     @property
@@ -383,9 +342,6 @@ class TransactionSummary(object):
         :param import_id: The import_id of this TransactionSummary.  # noqa: E501
         :type: str
         """
-        if import_id is None:
-            raise ValueError("Invalid value for `import_id`, must not be `None`")  # noqa: E501
-
         self._import_id = import_id
 
     def to_dict(self):

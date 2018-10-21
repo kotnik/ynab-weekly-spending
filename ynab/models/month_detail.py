@@ -83,9 +83,6 @@ class MonthDetail(object):
         :param month: The month of this MonthDetail.  # noqa: E501
         :type: date
         """
-        if month is None:
-            raise ValueError("Invalid value for `month`, must not be `None`")  # noqa: E501
-
         self._month = month
 
     @property
@@ -106,9 +103,6 @@ class MonthDetail(object):
         :param note: The note of this MonthDetail.  # noqa: E501
         :type: str
         """
-        if note is None:
-            raise ValueError("Invalid value for `note`, must not be `None`")  # noqa: E501
-
         self._note = note
 
     @property
@@ -131,9 +125,6 @@ class MonthDetail(object):
         :param to_be_budgeted: The to_be_budgeted of this MonthDetail.  # noqa: E501
         :type: float
         """
-        if to_be_budgeted is None:
-            raise ValueError("Invalid value for `to_be_budgeted`, must not be `None`")  # noqa: E501
-
         self._to_be_budgeted = to_be_budgeted
 
     @property
@@ -154,9 +145,6 @@ class MonthDetail(object):
         :param age_of_money: The age_of_money of this MonthDetail.  # noqa: E501
         :type: float
         """
-        if age_of_money is None:
-            raise ValueError("Invalid value for `age_of_money`, must not be `None`")  # noqa: E501
-
         self._age_of_money = age_of_money
 
     @property
@@ -179,9 +167,6 @@ class MonthDetail(object):
         :param categories: The categories of this MonthDetail.  # noqa: E501
         :type: list[Category]
         """
-        if categories is None:
-            raise ValueError("Invalid value for `categories`, must not be `None`")  # noqa: E501
-
         self._categories = categories
 
     def to_dict(self):
