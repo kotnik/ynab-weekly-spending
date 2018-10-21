@@ -21,6 +21,7 @@ logging.basicConfig(
 )
 log = logging.getLogger(__name__)
 
+
 TEXT = """
 {{ title }}
 
@@ -28,6 +29,7 @@ TEXT = """
 {{ tx[0] }}: {{ tx[1] }}
 {% endfor %}
 """
+
 
 HTML = """
 <b><i>{{ title }}</i></b>
@@ -43,6 +45,14 @@ HTML = """
 {% endfor %}
 </table>
 """
+
+
+def _get_group_name_by_id(groups, group_id):
+    for group in groups:
+        if group_id == group['id']:
+            return group['name']
+    return ''
+
 
 if __name__ == '__main__':
     # Get configuration from environment
@@ -69,6 +79,8 @@ if __name__ == '__main__':
     for budget in api_budget.get_budgets().data.budgets:
         if budget.name == budget_name:
             budget_id = budget.id
+            budget = api_budget.get_budget_by_id(budget_id).to_dict()['data']['budget']
+            category_groups = budget['category_groups']
             break
     else:
         raise Exception('Budget with name "%s" not found' % budget_name)
@@ -103,13 +115,12 @@ if __name__ == '__main__':
 
     # Get category names
     for tid, t in res.iteritems():
-        if t['name'] is not None:
-            continue
         if tid is None:
             res[tid]['name'] = 'Transfer'
             continue
         cat = api_cat.get_category_by_id(budget_id, tid).to_dict()['data']['category']
-        res[tid]['name'] = cat['name']
+        parent_cat = _get_group_name_by_id(category_groups, cat['category_group_id'])
+        res[tid]['name'] = parent_cat + ': ' + cat['name']
 
     # Sort top 10 results
     out = []
