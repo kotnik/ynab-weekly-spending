@@ -6,6 +6,7 @@ import os
 import json
 import datetime
 import smtplib
+import argparse
 from pprint import pprint as pp
 
 import hammock
@@ -42,44 +43,32 @@ def _get_group_name_by_id(groups, group_id):
     return ''
 
 
-def send_mail(to, subject, text, html):
-    mailgun_key = os.environ.get('MAILGUN_API_KEY')
-    mailgun_api_domain = os.environ.get('MAILGUN_API_DOMAIN', 'api.mailgun.net')
-    mailgun_domain = os.environ.get('MAILGUN_DOMAIN')
-
-    return requests.post(
-        "https://%s/v3/%s/messages" % (mailgun_api_domain, mailgun_domain),
-        auth=("api", mailgun_key),
-        data={"from": "YNAB Reporter <yanb@%s>" % mailgun_domain,
-              "to": to,
-              "subject": subject,
-              "text": text,
-              "html": html})
-
-
 def run():
-    # Get configuration from environment
-    api_key = os.environ.get('YNAB_API_KEY')
-    budget_name = os.environ.get('YNAB_BUDGET_NAME')
-    # Comma separated list of mails to send the report to
-    mails_send = os.environ.get('YNAB_SEND_TO', None)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--ynab-api-key", help="YNAB API key", type=str, required=True)
+    parser.add_argument("--ynab-budget-name", help="YNAB API key", type=str, required=True)
+    parser.add_argument("--mailgun-api-key", help="Mailgun API key", type=str, required=True)
+    parser.add_argument("--mailgun-api-domain", help="Mailgun API domain", default="api.eu.mailgun.net", type=str)
+    parser.add_argument("--mailgun-domain", help="Mailgun domain", type=str, required=True)
+    parser.add_argument("--mails", nargs="+", help="Mails to send report to", required=True)
+    options = parser.parse_args(sys.argv[1:])
 
     ynab = hammock.Hammock(
         "https://api.youneedabudget.com/v1",
-        headers={"Authorization": "Bearer %s" % api_key},
+        headers={"Authorization": "Bearer %s" % options.ynab_api_key},
     )
 
     budgets = ynab.budgets.GET().json()['data']['budgets']
     for budget in budgets:
-        if budget['name'] == budget_name:
+        if budget['name'] == options.ynab_budget_name:
             budget_id = budget['id']
             budget_full = ynab.budgets(budget_id).GET().json()['data']['budget']
             category_groups = budget_full['category_groups']
             break
     else:
-        raise Exception('Budget with name "%s" not found' % budget_name)
+        raise Exception('Budget with name "%s" not found' % options.ynab_budget_name)
 
-    log.info('Using %s (%s)', budget_name, budget_id)
+    log.info('Using %s (%s)', options.ynab_budget_name, budget_id)
 
     today = datetime.date.today()
     week_ago = today - datetime.timedelta(days=7)
@@ -136,10 +125,15 @@ def run():
         txs=out,
         )
 
-    if mails_send is None:
-        print(mail_text)
-    else:
-        for mail_to in mails_send.split(','):
-            log.info('Sending mail "%s" to %s...', mail_title, mail_to)
-            result = send_mail(mail_to, mail_title, mail_text.encode('utf-8'), mail_html.encode('utf-8'))
-            log.info(result)
+    for mail_to in options.mails:
+        log.info('Sending mail "%s" to %s...', mail_title, mail_to)
+        result = requests.post(
+            "https://%s/v3/%s/messages" % (options.mailgun_api_domain, options.mailgun_domain),
+            auth=("api", options.mailgun_api_key),
+            data={"from": "YNAB Reporter <yanb@%s>" % options.mailgun_domain,
+                  "to": mail_to,
+                  "subject": mail_title,
+                  "text": mail_text.encode('utf-8'),
+                  "html": mail_html.encode('utf-8')
+        })
+        log.info('Mailgun response: %s', result.status_code)
