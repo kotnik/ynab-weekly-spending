@@ -11,6 +11,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 import ynab
+import requests
 from ynab.rest import ApiException
 from jinja2 import Environment
 
@@ -23,8 +24,6 @@ log = logging.getLogger(__name__)
 
 
 TEXT = """
-{{ title }}
-
 {% for tx in txs %}
 {{ tx[0] }}: {{ tx[1] }}
 {% endfor %}
@@ -32,8 +31,6 @@ TEXT = """
 
 
 HTML = """
-<b><i>{{ title }}</i></b>
-<br>
 <table class="gridtable" style="font-family: verdana,arial,sans-serif;font-size: 11px;color: #333333;border-width: 1px;border-color: #666666;border-collapse: collapse;">
 <tr>
     <th style="border-width: 1px;padding: 8px;border-style: solid;border-color: #666666;background-color: #dedede;">Kategorija</th><th style="border-width: 1px;padding: 8px;border-style: solid;border-color: #666666;background-color: #dedede;">Ukupan iznos</th>
@@ -54,15 +51,27 @@ def _get_group_name_by_id(groups, group_id):
     return ''
 
 
+def send_mail(to, subject, text, html):
+    mailgun_key = os.environ.get('MAILGUN_API_KEY')
+    mailgun_api_domain = os.environ.get('MAILGUN_API_DOMAIN', 'api.mailgun.net')
+    mailgun_domain = os.environ.get('MAILGUN_DOMAIN')
+
+    return requests.post(
+        "https://%s/v3/%s/messages" % (mailgun_api_domain, mailgun_domain),
+        auth=("api", mailgun_key),
+        data={"from": "YNAB Reporter <yanb@%s>" % mailgun_domain,
+              "to": to,
+              "subject": subject,
+              "text": text,
+              "html": html})
+
+
 if __name__ == '__main__':
     # Get configuration from environment
     api_key = os.environ.get('YNAB_API_KEY')
     budget_name = os.environ.get('YNAB_BUDGET_NAME')
-    mail_server = os.environ.get('YNAB_MAIL_SERVER', 'smtp.gmail.com')
-    mail_user = os.environ.get('YNAB_MAIL_USER')
-    mail_password = os.environ.get('YNAB_MAIL_PASSWORD')
     # Comma separated list of mails to send the report to
-    mails_send = os.environ.get('YNAB_MAILS_SEND', None)
+    mails_send = os.environ.get('YNAB_SEND_TO', None)
 
     # Initialize the API
     log.info('Initializing API...')
@@ -142,29 +151,10 @@ if __name__ == '__main__':
         txs=out,
         )
 
-    # Prepare mails
-    msg = MIMEMultipart('alternative')
-    msg['Subject'] = mail_title
-    msg['From'] = mail_user
-    part1 = MIMEText(mail_text.encode('utf-8'), 'plain', 'utf-8')
-    part2 = MIMEText(mail_html.encode('utf-8'), 'html', 'utf-8')
-    msg.attach(part1)
-    msg.attach(part2)
-
-    # If mails are not defined, just output the resut
     if mails_send is None:
         print(mail_text)
     else:
-        # Send mails
         for mail_to in mails_send.split(','):
-            try:
-                log.info('Sending mail to %s' % mail_to)
-                msg['To'] = mail_to
-                server = smtplib.SMTP_SSL(mail_server, 465)
-                server.ehlo()
-                server.login(mail_user, mail_password)
-                server.sendmail(mail_user, mail_to, msg.as_string())
-                server.close()
-                log.info('Sent mail to %s' % mail_to)
-            except Exception as e:
-                log.error('Error sending mail to %s: %s' % (mail_to, e))
+            log.info('Sending mail "%s" to %s...', mail_title, mail_to)
+            result = send_mail(mail_to, mail_title, mail_text.encode('utf-8'), mail_html.encode('utf-8'))
+            log.info(result)
