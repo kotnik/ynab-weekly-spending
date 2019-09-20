@@ -1,7 +1,10 @@
 NOTES
+AUTHORS
+ChangeLog
 __pycache__/
 *.py[cod]
 *$py.class
 .env
 .eggs/
 *.egg-info/
+build/
