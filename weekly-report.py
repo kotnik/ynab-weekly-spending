@@ -1,26 +1,17 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
+import sys
 import time
 import os
 import json
 import datetime
 import smtplib
-import logging
-from pprint import pprint
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
+from pprint import pprint as pp
 
-import ynab
+import hammock
 import requests
-from ynab.rest import ApiException
+from logzero import logger as log
 from jinja2 import Environment
-
-
-logging.basicConfig(
-    format="%(asctime)s %(levelname)s %(message)s",
-    level=logging.INFO
-)
-log = logging.getLogger(__name__)
 
 
 TEXT = """
@@ -73,40 +64,34 @@ if __name__ == '__main__':
     # Comma separated list of mails to send the report to
     mails_send = os.environ.get('YNAB_SEND_TO', None)
 
-    # Initialize the API
-    log.info('Initializing API...')
-    ynab_config = ynab.configuration.Configuration()
-    ynab_config.api_key['Authorization'] = api_key
-    ynab_config.api_key_prefix['Authorization'] = 'Bearer'
-    api_client = ynab.api_client.ApiClient(configuration=ynab_config)
-    api_budget = ynab.BudgetsApi(api_client)
-    api_tx = ynab.TransactionsApi(api_client)
-    api_cat = ynab.CategoriesApi(api_client)
+    ynab = hammock.Hammock(
+        "https://api.youneedabudget.com/v1",
+        headers={"Authorization": "Bearer %s" % api_key},
+    )
 
-    # Get budget ID
-    budget_id = None
-    for budget in api_budget.get_budgets().data.budgets:
-        if budget.name == budget_name:
-            budget_id = budget.id
-            budget = api_budget.get_budget_by_id(budget_id).to_dict()['data']['budget']
-            category_groups = budget['category_groups']
+    budgets = ynab.budgets.GET().json()['data']['budgets']
+    for budget in budgets:
+        if budget['name'] == budget_name:
+            budget_id = budget['id']
+            budget_full = ynab.budgets(budget_id).GET().json()['data']['budget']
+            category_groups = budget_full['category_groups']
             break
     else:
         raise Exception('Budget with name "%s" not found' % budget_name)
 
-    # Set times
+    log.info('Using %s (%s)', budget_name, budget_id)
+
     today = datetime.date.today()
     week_ago = today - datetime.timedelta(days=7)
     since_date = week_ago.strftime('%Y-%m-%d')
 
-    # Get transactions
-    log.info('Fetching all transactions since %s...' % since_date)
-    api_response = api_tx.get_transactions(budget_id, since_date=since_date)
-    txs = api_response.to_dict()['data']['transactions']
+    log.info('Fetching all transactions since %s...', since_date)
+
+    transactions = ynab.budgets(budget_id).transactions.GET('?since_date=%s' % since_date).json()['data']['transactions']
 
     # Calculate spending
     res = {}
-    for tx in txs:
+    for tx in transactions:
         if tx['subtransactions']:
             tx = tx['subtransactions']
         else:
@@ -127,7 +112,7 @@ if __name__ == '__main__':
         if tid is None:
             res[tid]['name'] = 'Transfer'
             continue
-        cat = api_cat.get_category_by_id(budget_id, tid).to_dict()['data']['category']
+        cat = ynab.budgets(budget_id).categories(tid).GET().json()['data']['category']
         parent_cat = _get_group_name_by_id(category_groups, cat['category_group_id'])
         res[tid]['name'] = parent_cat + ': ' + cat['name']
 
