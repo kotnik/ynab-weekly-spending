@@ -57,7 +57,7 @@ def send_mail(to, subject, text, html):
               "html": html})
 
 
-if __name__ == '__main__':
+def run():
     # Get configuration from environment
     api_key = os.environ.get('YNAB_API_KEY')
     budget_name = os.environ.get('YNAB_BUDGET_NAME')

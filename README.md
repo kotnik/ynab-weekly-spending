@@ -32,3 +32,11 @@ YNAB_MAILS_SEND='me@myhouse.com,my-so@myhouse.com'         \
 ```
 
 Please report bugs in issues here.
+
+## How to run in development mode
+
+```
+virtualenv -p python2 .env
+source .env/bin/activate
+pip install --editable .
+```
