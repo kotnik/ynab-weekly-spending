@@ -15,7 +15,7 @@ Easy. You need:
 Now, after making sure you have all of the above, install this package:
 
 ```
-pip2 install --user ynab_weekly
+pip2 install --user YNAB-Weekly
 ```
 
 That is all, we are ready! Use this to run:
